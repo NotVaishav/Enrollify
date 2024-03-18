@@ -22,7 +22,7 @@ enum class EnrollifyNavDestinations(val title: String, val route: String) {
 @Composable
 fun EnrollifyNavGraph(
     navController: NavHostController,
-    enrollifyViewModel: EnrollifyViewModel,
+//    enrollifyViewModel: EnrollifyViewModel,
 ) {
     NavHost(
         navController = navController,

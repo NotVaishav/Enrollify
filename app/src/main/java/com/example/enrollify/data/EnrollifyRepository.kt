@@ -1,23 +1,60 @@
 package com.example.enrollify.data
 
+import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 
 interface CourseRepository {
     fun getAllCoursesStream(): Flow<List<Course>>
     fun getCourseStream(id: Int): Flow<Course?>
-    suspend fun insertCourse(item: Course)
+
+    fun getCourseFromUnique(id: String): Flow<Course?>
+    suspend fun insertCourse(item: Course): Result<Unit>
     suspend fun deleteCourse(item: Course)
     suspend fun updateCourse(item: Course)
     suspend fun getUnregisteredAndUncompletedCoursesStream(): Flow<List<Course>>
+
+    //    suspend fun getCoursesWithPrerequisites(): Flow<List<CourseWithPrerequisites>>
+    suspend fun insertPrerequisite(item: Prerequisite): Result<Unit>
 }
 
 
 class OfflineCourseRepository(private val courseDao: CourseDao) : CourseRepository {
-    override fun getAllCoursesStream(): Flow<List<Course>> = courseDao.getAllCourses()
+    override fun getAllCoursesStream(): Flow<List<Course>> {
+        Log.d("CourseRepository", "getAllCoursesStream() called")
+
+        return courseDao.getAllCourses()
+    }
     override fun getCourseStream(id: Int): Flow<Course?> = courseDao.getCourse(id)
-    override suspend fun insertCourse(item: Course) = courseDao.insert(item)
+    override fun getCourseFromUnique(id: String): Flow<Course?> = courseDao.getCourseFromUnique(id)
+
+    override suspend fun insertCourse(item: Course): Result<Unit> {
+        return try {
+            courseDao.insert(item)
+            Result.success(Unit)
+        } catch (e: SQLiteConstraintException) {
+            // Handle the constraint violation error here
+            // You can choose to log the error, show a message to the user, or handle it as needed
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteCourse(item: Course) = courseDao.delete(item)
     override suspend fun updateCourse(item: Course) = courseDao.update(item)
     override suspend fun getUnregisteredAndUncompletedCoursesStream(): Flow<List<Course>> =
         courseDao.getUnregisteredAndUncompletedCourses()
+
+//    override suspend fun getCoursesWithPrerequisites(): Flow<List<CourseWithPrerequisites>> =
+//        courseDao.getCoursesWithPrerequisites()
+
+    override suspend fun insertPrerequisite(item: Prerequisite): Result<Unit> {
+        return try {
+            courseDao.insertPrerequisite(item)
+            Result.success(Unit)
+        } catch (e: SQLiteConstraintException) {
+            // Handle the constraint violation error here
+            // You can choose to log the error, show a message to the user, or handle it as needed
+            Result.failure(e)
+        }
+    }
 }

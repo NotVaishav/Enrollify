@@ -1,4 +1,5 @@
 package com.example.enrollify.data
 
-class EnrollifyUIState {
-}
+data class EnrollifyUIState(
+    val coursesList: List<Course> = listOf()
+)
