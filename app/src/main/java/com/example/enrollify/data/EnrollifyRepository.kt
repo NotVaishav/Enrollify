@@ -9,6 +9,8 @@ interface CourseRepository {
     fun getCourseStream(id: Int): Flow<Course?>
 
     fun getCourseFromUnique(id: String): Flow<Course?>
+
+    fun getPrereqForCourse(id: Int): Flow<List<Course>>
     suspend fun insertCourse(item: Course): Result<Unit>
     suspend fun deleteCourse(item: Course)
     suspend fun updateCourse(item: Course)
@@ -25,8 +27,12 @@ class OfflineCourseRepository(private val courseDao: CourseDao) : CourseReposito
 
         return courseDao.getAllCourses()
     }
+
     override fun getCourseStream(id: Int): Flow<Course?> = courseDao.getCourse(id)
     override fun getCourseFromUnique(id: String): Flow<Course?> = courseDao.getCourseFromUnique(id)
+
+    override fun getPrereqForCourse(id: Int): Flow<List<Course>> =
+        courseDao.getPrereqForCourse(id)
 
     override suspend fun insertCourse(item: Course): Result<Unit> {
         return try {

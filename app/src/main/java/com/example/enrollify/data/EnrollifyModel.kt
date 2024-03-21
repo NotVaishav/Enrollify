@@ -27,7 +27,7 @@ data class Course(
     val term: Int,
     val about: String,
     val isCompleted: Boolean = false,
-    val isRegistered: Boolean,
+    var isRegistered: Boolean,
 )
 
 
