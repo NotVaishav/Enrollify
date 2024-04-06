@@ -5,5 +5,12 @@ data class EnrollifyUIState(
     val prereqList: List<Course> = listOf(),
     var isLoading: Boolean = false,
     var isEligible: Boolean = false,
-    var currentCourse: Course? = null
+    var showBottomSheet: Boolean = false,
+    var currentCourse: Course? = null,
+    var prereqNotCompleted: Boolean = false,
+    var maxCourseReached: Boolean = false,
+    var courseCountFirstTermReached: Boolean = false,
+    var courseCountSecondTermReached: Boolean = false,
+    var canOnlyRegisterInSecondTerm: Boolean = false,
+    var dependentCourses: List<Course> = listOf()
 )

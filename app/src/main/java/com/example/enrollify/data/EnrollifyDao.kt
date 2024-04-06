@@ -32,6 +32,9 @@ interface CourseDao {
     @Query("SELECT * FROM courses WHERE id IN (SELECT prerequisiteId FROM prerequisites WHERE courseId = :id)")
     fun getPrereqForCourse(id: Int): Flow<List<Course>>
 
+    @Query("SELECT * FROM courses WHERE id IN (SELECT courseId FROM prerequisites WHERE prerequisiteId = :id)")
+    fun getCoursesFromPrereq(id: Int): Flow<List<Course>>
+
     @Query(
         "SELECT * FROM courses WHERE isRegistered = 1 AND isCompleted = 1 ORDER BY name ASC"
     )

@@ -34,10 +34,10 @@ fun EnrollifyNavGraph(
             HomeScreen(navController = navController, enrollifyViewModel = enrollifyViewModel)
         }
         composable(route = EnrollifyNavDestinations.CourseInfo.title) {
-            CourseInfo(enrollifyViewModel = enrollifyViewModel)
+            CourseInfo(navController = navController, enrollifyViewModel = enrollifyViewModel)
         }
         composable(route = EnrollifyNavDestinations.MyCourses.title) {
-            MyCoursesScreen()
+            MyCoursesScreen(navController = navController, enrollifyViewModel = enrollifyViewModel)
         }
     }
 }

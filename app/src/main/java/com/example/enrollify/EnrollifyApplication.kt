@@ -112,7 +112,7 @@ class EnrollifyApplication : Application() {
                     courseUniqueId = "CS255",
                     name = "Advanced Data Structure",
                     professor = "",
-                    term = 1,
+                    term = 0,
                     about = "",
                     isCompleted = true,
                     isRegistered = false
@@ -121,7 +121,7 @@ class EnrollifyApplication : Application() {
                     courseUniqueId = "CS263",
                     name = "Computer Architecture and Organization",
                     professor = "",
-                    term = 1,
+                    term = 0,
                     about = "",
                     isCompleted = false,
                     isRegistered = false
@@ -166,7 +166,7 @@ class EnrollifyApplication : Application() {
                     courseUniqueId = "CS356",
                     name = "Theory of Computing",
                     professor = "",
-                    term = 1,
+                    term = 0,
                     about = "",
                     isCompleted = false,
                     isRegistered = false

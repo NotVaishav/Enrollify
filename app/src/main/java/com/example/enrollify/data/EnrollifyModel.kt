@@ -28,6 +28,7 @@ data class Course(
     val about: String,
     val isCompleted: Boolean = false,
     var isRegistered: Boolean,
+    var registeredInTerm: Int = 0
 )
 
 
