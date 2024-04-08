@@ -20,7 +20,7 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
         getCourses()
     }
 
-    private fun getCourses() {
+    fun getCourses() {
         _uiState.update { currentState ->
             currentState.copy(isLoading = true)
         }
@@ -50,7 +50,6 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
                 _uiState.update { currentState ->
                     currentState.copy(prereqList = courses)
                 }
-                Log.d("tempList", _uiState.value.prereqList.toString())
             }
         }
     }
@@ -77,43 +76,49 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
                     }
                 } else {
                     val courseCount =
-                        courses.count { (it.term == courseTerm || it.term == 0) && it.isRegistered }
-                    Log.d("TAGHERE", courseCount.toString())
+                        courses.count { (it.term == courseTerm || it.registeredInTerm == courseTerm) && it.isRegistered }
                     if (courseCount == 4) {
                         _uiState.update { currentState ->
                             currentState.copy(maxCourseReached = true)
                         }
-                        Log.d("COURSELIMIT", "Reached course Limit for the term")
                     }
                 }
-                val allCompletedAndRegistered = _uiState.value.prereqList.all { course ->
-                    if (course.term == 0) {
-                        _uiState.update { currentState ->
-                            currentState.copy(canOnlyRegisterInSecondTerm = true)
-                        }
-                        (course.isRegistered && course.registeredInTerm == 1) || course.isCompleted
+                val allCompletedAndRegistered = _uiState.value.prereqList.all { tempCourse ->
+                    if (tempCourse.isCompleted) {
+                        true
                     } else {
-                        course.isRegistered || course.isCompleted
-                    }
-                }
-                Log.d("COMPLETED", allCompletedAndRegistered.toString())
+                        if (course.term == 0) {
+                            if ((tempCourse.isRegistered && tempCourse.registeredInTerm == 1)) {
+                                _uiState.update { currentState ->
+                                    currentState.copy(canOnlyRegisterInSecondTerm = true)
+                                }
+                            }
 
+                            (tempCourse.isRegistered && tempCourse.registeredInTerm == 1)
+                        } else {
+                            tempCourse.isRegistered
+                        }
+                    }
+
+                }
                 if (!allCompletedAndRegistered) {
                     _uiState.update { currentState ->
                         currentState.copy(prereqNotCompleted = true)
                     }
-                    Log.d("COURSENOTRC", "Prereq courses are not registered or completed")
                 }
             }
         }
     }
 
     fun updateCourse(course: Course, term: Int = 0) {
+        Log.d("CHECK 2", term.toString())
         course.isRegistered = !course.isRegistered
         course.registeredInTerm = term
         viewModelScope.launch {
             courseRepository.updateCourse(course)
+
         }
+
     }
 
     fun unregisterDatabaseCourse(course: Course, term: Int = 0, boolVal: Boolean = false) {
@@ -128,7 +133,6 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
         viewModelScope.launch {
             courseRepository.getCoursesFromPrereq(course.id).collect { courses ->
                 _uiState.update { currentState ->
-                    Log.d("Checking", courses.toString())
                     currentState.copy(
                         dependentCourses = courses
                     )
@@ -156,6 +160,12 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
         }
     }
 
+    fun setFinalTermValue(value: Int) {
+        _uiState.update { currentState ->
+            currentState.copy(finalTermValue = value)
+        }
+    }
+
     fun resetCourseValues() {
         _uiState.update { currentState ->
             currentState.copy(
@@ -163,7 +173,28 @@ class EnrollifyViewModel(private val courseRepository: CourseRepository) : ViewM
                 maxCourseReached = false,
                 courseCountFirstTermReached = false,
                 courseCountSecondTermReached = false,
-                canOnlyRegisterInSecondTerm = false
+                canOnlyRegisterInSecondTerm = false,
+                showBottomSheet = false,
+                isEligible = false,
+                finalTermValue = 1
+            )
+        }
+    }
+
+    fun resetToMainValues() {
+        getCourses()
+        _uiState.update { currentState ->
+            currentState.copy(
+                prereqNotCompleted = false,
+                maxCourseReached = false,
+                courseCountFirstTermReached = false,
+                courseCountSecondTermReached = false,
+                canOnlyRegisterInSecondTerm = false,
+                showBottomSheet = false,
+                isEligible = false,
+                dependentCourses = listOf(),
+                prereqList = listOf(),
+                finalTermValue = 1
             )
         }
     }

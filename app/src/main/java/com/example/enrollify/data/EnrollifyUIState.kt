@@ -12,5 +12,6 @@ data class EnrollifyUIState(
     var courseCountFirstTermReached: Boolean = false,
     var courseCountSecondTermReached: Boolean = false,
     var canOnlyRegisterInSecondTerm: Boolean = false,
-    var dependentCourses: List<Course> = listOf()
+    var dependentCourses: List<Course> = listOf(),
+    var finalTermValue: Int = 1
 )

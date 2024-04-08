@@ -1,4 +1,5 @@
-package com.example.enrollify.ui.home.components
+package com.example.enrollify.ui.mycourses.components
+
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +27,7 @@ import androidx.navigation.NavController
 import com.example.enrollify.data.Course
 
 @Composable
-fun CourseCard(
+fun DoneCourseCard(
     modifier: Modifier = Modifier,
     navController: NavController,
     course: Course,
@@ -60,28 +61,16 @@ fun CourseCard(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                Row(
-                    modifier = modifier.padding(vertical = 5.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-
-                ) {
-                    Column(modifier = modifier) {
-                        Text(text = course.professor)
-
-                        Spacer(modifier = modifier.size(5.dp))
-                        Row(
-                            modifier = modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "3 Credits", fontSize = 14.sp)
-                            when (course.term) {
-                                0 -> Text("Term 1 & 2")
-                                1 -> Text("Term 1")
-                                else -> Text("Term 2")
-                            }
-                        }
+                if (course.isCompleted) {
+                    if (course.term == 0) {
+                        Text(text = "Term 1 & 2")
+                    } else {
+                        Text(text = "Term ${course.term}")
                     }
+                } else {
+                    Text(text = "Term ${course.registeredInTerm}")
                 }
+
             }
 
             Icon(

@@ -1,5 +1,7 @@
 package com.example.enrollify.ui.courseinfo
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +15,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.RadioButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -42,16 +48,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.enrollify.R
 import com.example.enrollify.data.Course
+import com.example.enrollify.data.EnrollifyUIState
 import com.example.enrollify.ui.AppViewModelProvider
 import com.example.enrollify.ui.EnrollifyViewModel
+import com.example.enrollify.ui.courseinfo.components.AboutSection
+import com.example.enrollify.ui.courseinfo.components.LineIconText
+import com.example.enrollify.ui.courseinfo.components.PrerequisiteSection
+import com.example.enrollify.ui.courseinfo.components.RegisterSection
+import com.example.enrollify.ui.courseinfo.components.TermSection
+import com.example.enrollify.ui.courseinfo.components.UnregisterSection
 import com.example.enrollify.ui.navigation.EnrollifyNavDestinations
 import kotlinx.coroutines.launch
 
@@ -60,7 +76,9 @@ import kotlinx.coroutines.launch
 fun CourseInfo(
     modifier: Modifier = Modifier,
     enrollifyViewModel: EnrollifyViewModel,
-    navController: NavController
+    navController: NavController,
+    viaUnregister: Boolean = false,
+    viaDone: Boolean = false
 ) {
     val titles = listOf("About", "Term", "Prerequisites")
     var tabIndex by remember { mutableStateOf(0) }
@@ -69,6 +87,7 @@ fun CourseInfo(
         skipPartiallyExpanded = true
     )
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Scaffold(modifier = modifier.fillMaxSize()) { contentPadding ->
         Column(
@@ -78,11 +97,15 @@ fun CourseInfo(
         ) {
             Box(modifier = modifier.height(230.dp)) {
                 Image(
-                    painter = painterResource(id = R.drawable.test_image),
+                    painter = painterResource(id = R.drawable.itcbg),
                     contentDescription = null,
                     modifier = modifier.fillMaxWidth(),
                     contentScale = ContentScale.Crop
                 )
+//                AsyncImage(
+//                    model = "https://pub-2e611e3d244a41dba6deb47044c8b9d1.r2.dev/itcbg.jpeg",
+//                    contentDescription = null
+//                )
                 Box(modifier = modifier.align(Alignment.TopStart)) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -99,9 +122,9 @@ fun CourseInfo(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = "Advanced Database", modifier = modifier
+                        text = enrollifyUIState.currentCourse?.name!!, modifier = modifier
                             .background(
-                                Color.DarkGray.copy(alpha = 0.5f),
+                                Color.Black.copy(alpha = 0.6f),
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(10.dp),
@@ -132,8 +155,8 @@ fun CourseInfo(
                         .weight(1f, false)
                 ) {
                     when (tabIndex) {
-                        0 -> AboutSection()
-                        1 -> TermSection()
+                        0 -> AboutSection(course = enrollifyUIState.currentCourse!!)
+                        1 -> TermSection(course = enrollifyUIState.currentCourse!!)
                         2 -> PrerequisiteSection(prereqList = enrollifyUIState.prereqList)
                     }
                 }
@@ -146,13 +169,26 @@ fun CourseInfo(
                         .padding(vertical = 10.dp)
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    elevation = ButtonDefaults.elevatedButtonElevation(8.dp)
+                    elevation = ButtonDefaults.elevatedButtonElevation(8.dp),
+                    enabled = !viaDone
                 ) {
-                    Text(
-                        text = "Check Eligibility",
-                        modifier = modifier.padding(vertical = 8.dp),
-                        fontSize = 16.sp
-                    )
+                    if (viaDone) {
+                        Text("Already Completed")
+                    } else {
+                        if (viaUnregister) {
+                            Text(
+                                text = "Unregister",
+                                modifier = modifier.padding(vertical = 8.dp),
+                                fontSize = 16.sp
+                            )
+                        } else {
+                            Text(
+                                text = "Check Eligibility",
+                                modifier = modifier.padding(vertical = 8.dp),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
                 }
                 if (enrollifyUIState.showBottomSheet) {
                     ModalBottomSheet(
@@ -161,101 +197,37 @@ fun CourseInfo(
                             enrollifyViewModel.resetCourseValues()
                         },
                         sheetState = sheetState,
-                        modifier = modifier.height(400.dp),
+                        modifier = if (!viaUnregister) {
+                            modifier.wrapContentHeight()
+                        } else {
+                            modifier.wrapContentHeight()
+                        },
                         dragHandle = {}
                     ) {
-                        var finalTerm = 0
+                        Log.d("CHECK", enrollifyUIState.finalTermValue.toString())
+                        if (viaUnregister) {
+                            UnregisterSection(cancelButton = {
+                                enrollifyViewModel.setBottomSheetValue(false)
 
-                        Column {
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        enrollifyViewModel.unRegisterCourse(enrollifyUIState.currentCourse!!)
-                                        enrollifyViewModel.setBottomSheetValue(false)
-                                        enrollifyViewModel.resetCourseValues()
-                                    }
-                                },
-                            ) {
-                                Text("unreg")
-                            }
-                            if (enrollifyUIState.currentCourse?.isCompleted == true) {
-                                Text(text = "Already Completed")
-                            } else if (enrollifyUIState.currentCourse?.isRegistered == true) {
-                                Text(text = "Already Registered")
-                            } else {
-                                if (enrollifyUIState.prereqList.isEmpty()) {
-                                    Text("Prereqs are not needed")
-                                } else {
-                                    if (enrollifyUIState.prereqNotCompleted) {
-                                        Text("Prereq not completed or registered")
-                                    } else {
-                                        Text("All Prereq are either completed or registered for")
-                                    }
+                            }, unregisterBtn = {
+                                scope.launch {
+                                    enrollifyViewModel.unRegisterCourse(enrollifyUIState.currentCourse!!)
+                                    enrollifyViewModel.setBottomSheetValue(false)
+                                    enrollifyViewModel.resetToMainValues()
+                                    navController.navigate(EnrollifyNavDestinations.MyCourses.title)
+                                    Toast.makeText(
+                                        context,
+                                        "Course(s) dropped successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-                                if (!enrollifyUIState.prereqNotCompleted) {
-                                    if (enrollifyUIState.currentCourse?.term == 0) {
-                                        if (enrollifyUIState.courseCountFirstTermReached && enrollifyUIState.courseCountSecondTermReached) {
-                                            Text("Reached Max Capacity")
-                                        } else if (enrollifyUIState.courseCountFirstTermReached) {
-                                            Text("Can book for second term only")
-                                        } else if (enrollifyUIState.courseCountSecondTermReached) {
-                                            Text("Can book for first term only")
-                                        } else {
-                                            if (enrollifyUIState.canOnlyRegisterInSecondTerm) {
-                                                Text("Can book for second term only because prereq is currently in term one")
-                                                finalTerm = 2
-                                            } else {
-                                                Text("Can book for any term")
-                                                val terms = listOf(1, 2)
-                                                var selectedTerm by remember { mutableStateOf(terms[0]) }
-                                                Column(Modifier.padding(16.dp)) {
-                                                    terms.forEach { term ->
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            modifier = Modifier.padding(vertical = 8.dp)
-                                                        ) {
-                                                            RadioButton(
-                                                                selected = selectedTerm == term,
-                                                                onClick = {
-                                                                    selectedTerm = term
-                                                                    finalTerm = term
-                                                                },
-                                                                modifier = Modifier.padding(end = 8.dp)
-                                                            )
-                                                            Text(text = "Term $term")
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                        }
-                                    } else {
-                                        if (enrollifyUIState.maxCourseReached) {
-                                            Text("Max Courses Reached for Term")
-                                        } else {
-                                            Text("Can register for the term")
-                                        }
-                                    }
-                                }
-                                Button(
-                                    onClick = {
-                                        scope.launch {
-                                            enrollifyViewModel.updateCourse(
-                                                enrollifyUIState.currentCourse!!,
-                                                finalTerm
-                                            )
-                                            enrollifyViewModel.setBottomSheetValue(false)
-                                            enrollifyViewModel.resetCourseValues()
-                                        }
-
-                                    },
-                                    enabled = !enrollifyUIState.maxCourseReached && !enrollifyUIState.prereqNotCompleted
-                                ) {
-                                    Text("Check")
-                                }
-
-                            }
-
+                            }, enrollifyUIState = enrollifyUIState)
+                        } else {
+                            RegisterSection(
+                                enrollifyViewModel = enrollifyViewModel,
+                                enrollifyUIState = enrollifyUIState,
+                                navController = navController
+                            )
                         }
                     }
                 }
@@ -264,28 +236,5 @@ fun CourseInfo(
     }
 }
 
-@Composable
-fun AboutSection(modifier: Modifier = Modifier) {
-    Text(
-        text =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut laoreet ex, vel elementum odio. In condimentum mi id magna accumsan sagittis. Sed blandit, orci ac interdum pharetra, turpis dolor rutrum massa, eget fringilla urna risus mattis eros. Morbi nec ipsum eu diam dictum hendrerit eu dignissim ipsum. Donec ac enim mollis, tempus mauris at, hendrerit nibh."
-    )
-}
 
-@Composable
-fun TermSection(modifier: Modifier = Modifier) {
-    Text(text = "This course is offered only in the 1st term")
-}
 
-@Composable
-fun PrerequisiteSection(modifier: Modifier = Modifier, prereqList: List<Course>) {
-    LazyColumn {
-        items(items = prereqList) { item ->
-            Row {
-                Text(text = item.courseUniqueId)
-                Spacer(modifier = modifier.size(15.dp))
-                Text(text = item.name)
-            }
-        }
-    }
-}

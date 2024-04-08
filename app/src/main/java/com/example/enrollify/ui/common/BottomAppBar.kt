@@ -24,6 +24,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.enrollify.ui.EnrollifyViewModel
 import com.example.enrollify.ui.navigation.EnrollifyNavDestinations
 
 
@@ -54,7 +55,11 @@ val items = listOf(
 )
 
 @Composable
-fun EnrollifyBottomAppBar(modifier: Modifier = Modifier, navController: NavController) {
+fun EnrollifyBottomAppBar(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    enrollifyViewModel: EnrollifyViewModel
+) {
     NavigationBar(
 //        containerColor = Color(0xFFF5F5F5),
         modifier = modifier
@@ -76,6 +81,7 @@ fun EnrollifyBottomAppBar(modifier: Modifier = Modifier, navController: NavContr
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }
+                        enrollifyViewModel.resetCourseValues()
                     },
                     icon = {
                         Icon(imageVector = item.icon, contentDescription = null)

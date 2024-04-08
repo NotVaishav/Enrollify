@@ -16,7 +16,7 @@ import com.example.enrollify.ui.mycourses.MyCoursesScreen
 enum class EnrollifyNavDestinations(val title: String, val route: String) {
     Home(title = "home", route = "homeScreen"),
     MyCourses(title = "courses", route = "coursesScreen"),
-    CourseInfo(title = "courseInfo", route = "courseInfo")
+    CourseInfo(title = "courseInfo/{viaRoute}", route = "courseInfo")
 }
 
 
@@ -33,8 +33,26 @@ fun EnrollifyNavGraph(
         composable(route = EnrollifyNavDestinations.Home.title) {
             HomeScreen(navController = navController, enrollifyViewModel = enrollifyViewModel)
         }
-        composable(route = EnrollifyNavDestinations.CourseInfo.title) {
-            CourseInfo(navController = navController, enrollifyViewModel = enrollifyViewModel)
+        composable(route = EnrollifyNavDestinations.CourseInfo.title) { backStackEntry ->
+            val viaRoute = backStackEntry.arguments?.getString("viaRoute")
+            if (viaRoute == "done") {
+                CourseInfo(
+                    navController = navController,
+                    enrollifyViewModel = enrollifyViewModel,
+                    viaDone = true
+                )
+
+            } else if (viaRoute == "register") {
+                CourseInfo(
+                    navController = navController,
+                    enrollifyViewModel = enrollifyViewModel,
+                    viaUnregister = true
+                )
+
+            } else {
+                CourseInfo(navController = navController, enrollifyViewModel = enrollifyViewModel)
+
+            }
         }
         composable(route = EnrollifyNavDestinations.MyCourses.title) {
             MyCoursesScreen(navController = navController, enrollifyViewModel = enrollifyViewModel)
